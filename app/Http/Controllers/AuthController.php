@@ -17,21 +17,9 @@ class AuthController extends Controller
     }
 
 
-    public function registration(): object
+    public function registration()
     {
-        if (!request()->email or !request()->password) {
-            return response()->json([
-                'error' => "email and password required",
-            ], 422);
-        } elseif (str_contains(User::all('email'), request()->email)) {
-            return response()->json([
-                'error' => 'this email is used'
-            ], 422);
-        } elseif (strlen(request()->password) < 4) {
-            return response()->json([
-                'error' => 'password must be more than 3 characters'
-            ], 422);
-        } else {
+        if ($this->loginValidation(request()) === 'login and password is valid') {
             User::create([
                 'email' => request()->email,
                 'password' => request()->password,
@@ -45,16 +33,35 @@ class AuthController extends Controller
                 ]
             ]);
         }
+        else {
+            return $this->loginValidation(request());
+        }
     }
 
-    public
-    function loginValidation($request): bool
+    public function loginValidation($request)
     {
-        if ($request->validate(['email' => 'regex:/^([a-z0-9\+_\-]+)(\.[a-z0-9\+_\-]+)*@([a-z0-9\-]+\.)+[a-z]{2,6}$/ix'])
-            ) {
-            return true;
-        } else {
-            return false;
+        if (!request()->email or !request()->password) {
+            return response()->json([
+                'error' => "email and password required",
+            ], 422);
+        } elseif (!filter_var($request->email, FILTER_VALIDATE_EMAIL))
+        {
+            return response()->json([
+                    'error' => 'email must be valid'
+                ], 422);
+        }
+        elseif (strlen($request->password) < 4) {
+            return response()->json([
+                'error' => 'password must be more than 3 characters'
+            ], 422);
+        }
+        elseif (str_contains(User::all('email'), $request->email)) {
+            return response()->json([
+                'error' => 'this email is used'
+            ], 422);
+        }
+        else {
+            return 'login and password is valid';
         }
     }
 
