@@ -6,4 +6,5 @@ use App\Http\Controllers\AuthController;
 
 Route::get('/', [AuthController::class, 'index']);
 
-Route::post('/auth', [AuthController::class, 'registration']);
+Route::post('/singup', [AuthController::class, 'registration']);
+Route::post('/singin', [AuthController::class, 'authorization']);
