@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuthToken;
 use App\Models\User;
-use Carbon\Carbon;
-use TheSeer\Tokenizer\Token;
-use function Symfony\Component\String\u;
 
 class AuthController extends Controller
 
@@ -29,8 +27,6 @@ class AuthController extends Controller
             User::create([
                 'email' => request()->email,
                 'password' => request()->password,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
             ]);
             $user = User::all()->where('email', request()->email);
             return response()->json([
@@ -46,18 +42,20 @@ class AuthController extends Controller
         }
     }
 
-    public function authorization()
+    public function authorization(): object
     {
         $user = User::all()->where('email', request()->email);
-//        echo $user->value('password');
-//        echo '   ';
-//        echo request()->password;
         if ($this->validationAuthForm(request()) === 'login and password is valid') {
             if ($user->value('email') === request()->email && $user->value('password') === request()->password) {
+                AuthToken::create([
+                    'user_id' => $user->value('id'),
+                    'auth_token' => $this->generateTokenAuth(),
+                ]);
                 return response()->json([
                     'message' => [
                         'status' => 'success',
                         'user_id' => $user->value('id'),
+                        'auth_token' => $this->generateTokenAuth()
                     ]
                 ]);
             } else {
@@ -89,7 +87,7 @@ class AuthController extends Controller
         }
     }
 
-    function generateTokenAuth($length = 50): string
+    private function generateTokenAuth($length = 50): string
     {
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $charactersLength = strlen($characters);
